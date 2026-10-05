@@ -1,0 +1,12 @@
+# 큰 파일·작업 파일은 저장소에 올리지 않는다 (setup.sh 가 다시 받음)
+models/
+work/
+output/
+input/
+refs/
+tests/sample.mp4
+tests/_sample_tmp/
+assets/sfx/*.wav
+assets/bgm/auto_lofi.wav
+__pycache__/
+*.pyc

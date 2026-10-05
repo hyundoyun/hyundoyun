@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && ./setup.sh >/tmp/video-editor-setup.log 2>&1 || true",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}

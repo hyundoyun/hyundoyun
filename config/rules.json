@@ -1,0 +1,219 @@
+{
+  "_comment": "편집 규칙집(기계용). 사람용 설명은 docs/편집규칙집.md. 값을 바꾸면 다음 편집부터 바로 반영된다.",
+  "version": 1,
+  "source": "기본값 (레퍼런스 영상 미분석). python -m editor analyze <유튜브링크...> 실행 시 측정값으로 갱신됨",
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "video_crf": 20,
+    "video_preset": "medium",
+    "audio_bitrate": "192k",
+    "loudness_lufs": -14
+  },
+  "transcribe": {
+    "engine": "auto",
+    "_engine_help": "auto = faster-whisper(인터넷으로 모델 받을 수 있을 때) → 안 되면 sherpa-onnx(오프라인 한국어 모델)",
+    "whisper_model": "large-v3",
+    "language": "ko"
+  },
+  "script_cleanup": {
+    "_help": "② 교정 대본: 말을 고치지 않고 '빼기'만 한다.",
+    "filler_words": [
+      "어",
+      "어어",
+      "음",
+      "음음",
+      "으",
+      "으음",
+      "어음",
+      "에",
+      "에에",
+      "그어",
+      "저어",
+      "아아"
+    ],
+    "remove_stutters": true,
+    "remove_repeats": true,
+    "max_repeat_ngram": 6,
+    "remove_restarts": true,
+    "restart_max_gap": 2.5,
+    "long_pause_sec": 0.45,
+    "keep_pause_sec": 0.12,
+    "sentence_break_pause_sec": 0.7
+  },
+  "cut": {
+    "pad_before_sec": 0.06,
+    "pad_after_sec": 0.1,
+    "merge_gap_sec": 0.12,
+    "min_segment_sec": 0.25,
+    "audio_fade_ms": 12
+  },
+  "zoom": {
+    "_help": "컷이 이어질 때 화면 크기를 번갈아 바꿔 점프컷을 자연스럽게 한다. 강조 순간엔 펀치 줌.",
+    "jumpcut_alternate": true,
+    "jumpcut_scales": [
+      1.0,
+      1.12
+    ],
+    "punch_in_on_emphasis": true,
+    "punch_style": "snap",
+    "punch_scale": 1.22,
+    "punch_hold_sec": 1.2,
+    "focus_y": 0.42,
+    "max_static_sec": 7.0
+  },
+  "subtitle": {
+    "font": "Pretendard ExtraBold",
+    "font_file": "assets/fonts/Pretendard-ExtraBold.otf",
+    "size_px": 68,
+    "color": "#FFFFFF",
+    "outline_color": "#000000",
+    "outline_px": 5,
+    "shadow_px": 2,
+    "box": false,
+    "box_color": "#000000B0",
+    "position": "bottom",
+    "margin_bottom_px": 90,
+    "max_chars_per_line": 18,
+    "max_lines": 1,
+    "min_duration_sec": 0.6,
+    "highlight_words": true,
+    "highlight_color": "#FFE14D"
+  },
+  "emphasis": {
+    "_help": "강조 자막: 숫자·핵심어·느낌표 문장에서 화면 위쪽에 크게 '팝' 하고 뜬다.",
+    "font": "Black Han Sans",
+    "font_file": "assets/fonts/BlackHanSans-Regular.ttf",
+    "size_px": 120,
+    "colors": [
+      "#FFE14D",
+      "#FF5A5A",
+      "#5AD2FF"
+    ],
+    "outline_color": "#000000",
+    "outline_px": 8,
+    "position_y": 0.22,
+    "pop_ms": 160,
+    "duration_sec": 1.4,
+    "min_gap_sec": 4.0,
+    "max_per_minute": 8,
+    "auto_numbers": true,
+    "auto_exclaim": true,
+    "keywords": [
+      "진짜",
+      "핵심",
+      "중요",
+      "무조건",
+      "절대",
+      "꿀팁",
+      "주의",
+      "결론",
+      "최초",
+      "역대급",
+      "충격",
+      "비밀",
+      "정답",
+      "포인트"
+    ]
+  },
+  "sfx": {
+    "_help": "효과음 타이밍. 파일은 assets/sfx/ (없으면 자동 생성).",
+    "enabled": true,
+    "volume_db": -8,
+    "on_emphasis": "pop",
+    "on_broll_in": "whoosh",
+    "on_intro_title": "whoosh",
+    "on_outro": "ding",
+    "on_jumpcut": null,
+    "lead_ms": 30
+  },
+  "bgm": {
+    "enabled": true,
+    "folder": "assets/bgm",
+    "volume_db": -24,
+    "duck_under_voice": true,
+    "duck_db": -8,
+    "fade_in_sec": 1.0,
+    "fade_out_sec": 2.5
+  },
+  "broll": {
+    "_help": "⑤ 자료화면: 말한 내용에 맞는 공식 사이트/기사 제목 화면. 출처는 작게.",
+    "enabled": true,
+    "mode": "pip",
+    "_mode_help": "pip = 화면 오른쪽 위에 카드로 띄움, full = 전체 화면으로 덮음",
+    "pip_width_ratio": 0.56,
+    "pip_margin_px": 48,
+    "full_ken_burns": 1.06,
+    "duration_sec": 3.2,
+    "min_gap_sec": 6.0,
+    "corner_radius_px": 18,
+    "source_label": "출처: {source}",
+    "source_size_px": 26,
+    "source_color": "#FFFFFFCC"
+  },
+  "intro": {
+    "enabled": true,
+    "hook_from_script": true,
+    "hook_max_sec": 6.0,
+    "title_card_sec": 1.8,
+    "title_font": "Black Han Sans",
+    "title_size_px": 110,
+    "title_color": "#FFFFFF",
+    "title_accent": "#FFE14D",
+    "background": "#111111"
+  },
+  "outro": {
+    "enabled": true,
+    "card_sec": 4.0,
+    "text": "구독 · 좋아요 · 알림 설정",
+    "sub_text": "다음 영상에서 만나요!",
+    "background": "#111111"
+  },
+  "qc": {
+    "speech_gap_max_sec": 0.9,
+    "freeze_min_sec": 1.5,
+    "freeze_noise": 0.003,
+    "pii_sample_every_sec": 0.5,
+    "pii_patterns": {
+      "이메일": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
+      "휴대폰": "01[016789][-. ]?\\d{3,4}[-. ]?\\d{4}",
+      "전화번호": "0\\d{1,2}[-. ]\\d{3,4}[-. ]\\d{4}",
+      "주민등록번호": "\\d{6}[- ]?[1-4]\\d{6}",
+      "카드번호": "\\d{4}[- ]\\d{4}[- ]\\d{4}[- ]\\d{4}",
+      "계좌번호": "\\d{3,6}-\\d{2,6}-\\d{4,8}"
+    },
+    "pii_keywords": [
+      "비밀번호",
+      "password",
+      "주소:",
+      "계좌",
+      "주민"
+    ],
+    "blur_strength": 24,
+    "typo_dictionary": {
+      "됬": "됐",
+      "몇일": "며칠",
+      "어떻해": "어떡해",
+      "왠만": "웬만",
+      "금새": "금세",
+      "안되요": "안 돼요",
+      "되요": "돼요",
+      "할께요": "할게요",
+      "할께": "할게",
+      "있슴": "있음",
+      "않되": "안 되"
+    },
+    "max_fix_rounds": 2
+  },
+  "pipeline_order": [
+    "1_transcribe",
+    "2_clean_script",
+    "3_cut",
+    "4_subtitles_sfx_bgm",
+    "5_broll",
+    "6_render_mp4",
+    "7_qc_and_fix"
+  ],
+  "learned_from_feedback": []
+}
