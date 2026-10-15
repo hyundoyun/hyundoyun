@@ -103,6 +103,14 @@ def article_card(title: str, source: str, url: str, kind: str, rules: dict, out:
     return out
 
 
+def inset_mask(w: int, h: int, radius: int, out: Path) -> Path:
+    """얼굴 작은 창의 둥근 모서리 모양(흰색=보이는 곳)."""
+    m = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(m).rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
+    m.save(out)
+    return out
+
+
 def finish_broll(src: Path, source: str, rules: dict, out: Path) -> Path:
     """자료화면을 영상 규격에 맞추고 모서리를 둥글게, 아래에 작은 출처를 붙인다."""
     b, o = rules["broll"], rules["output"]

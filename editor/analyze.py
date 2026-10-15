@@ -19,10 +19,55 @@ SR = 16000
 
 
 # ---------- 내려받기 ----------
+COOKIES = ROOT / "config" / "youtube_cookies.txt"  # 있으면 사용(로봇 확인 통과용, 저장소에는 올리지 않음)
+
+
+def YT_OPTS() -> list[str]:
+    import shutil
+
+    opts = ["--cookies", str(COOKIES)] if COOKIES.exists() else []
+    if shutil.which("node"):
+        opts += ["--js-runtimes", "node"]
+    return opts
+
+
+class BotBlocked(Exception):
+    """유튜브가 이 서버를 '로봇'으로 보고 영상 내려받기를 막음(로그인 요구). 접속 자체는 됨."""
+
+
+def storyboard_fallback(url: str) -> Path | None:
+    """영상을 못 받을 때: 유튜브 '미리보기 그림 묶음'(320x180, 3x3 칸, 약 5~10초 간격)만 받아
+    refs/<ID>/storyboard_*.jpg 로 저장한다. 소리·정확한 컷 시간은 없고, 화면 모양(자막·자료화면·인트로)만 볼 수 있다."""
+    import json
+    import urllib.request
+
+    r = run(["yt-dlp", "--extractor-args", "youtube:player_client=mweb", "-f", "sb0", "-j", url], check=False)
+    if r.returncode != 0 or not r.stdout.strip():
+        return None
+    j = json.loads(r.stdout.strip().splitlines()[-1])
+    sb = next((f for f in j.get("formats", []) if f.get("format_id") == "sb0"), None)
+    if not sb:
+        return None
+    d = REFS / j["id"]
+    d.mkdir(parents=True, exist_ok=True)
+    for i, fr in enumerate(sb.get("fragments", [])):
+        (d / f"storyboard_{i + 1:03d}.jpg").write_bytes(urllib.request.urlopen(fr["url"], timeout=30).read())
+    write_json(d / "storyboard.json", {
+        "url": url, "title": j.get("title"), "channel": j.get("channel"), "duration": j.get("duration"),
+        "grid": [sb.get("rows"), sb.get("columns")], "sheet_sec": (sb.get("fragments") or [{}])[0].get("duration"),
+        "sheets": len(sb.get("fragments", []))})
+    return d
+
+
 def download(url: str) -> Path:
     REFS.mkdir(exist_ok=True)
-    r = run(["yt-dlp", "--print", "id", "--skip-download", url], check=False)
+    for _ in range(2):  # 유튜브 쪽 일시 거절(429 등)은 한 번 더 시도
+        r = run(["yt-dlp", *YT_OPTS(), "--print", "id", "--skip-download", url], check=False)
+        if r.returncode == 0:
+            break
     if r.returncode != 0:
+        if "not a bot" in r.stderr or "Sign in" in r.stderr or "ERROR: [youtube]" in r.stderr:
+            raise BotBlocked(url)
         blocked = "403" in r.stderr or "proxy" in r.stderr.lower()
         raise SystemExit(f"유튜브 영상을 받을 수 없습니다: {url}\n" + (
             "→ 이 환경의 인터넷 설정이 www.youtube.com 접속을 막고 있습니다. 클라우드 환경 메뉴 → Edit → Network access 에서 "
@@ -33,7 +78,7 @@ def download(url: str) -> Path:
     mp4 = d / "video.mp4"
     if not mp4.exists():
         log(f"레퍼런스 내려받는 중: {url}")
-        run(["yt-dlp", "-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]", "--merge-output-format", "mp4",
+        run(["yt-dlp", *YT_OPTS(), "-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]", "--merge-output-format", "mp4",
              "-o", str(mp4), "--write-info-json", "--no-playlist", url])
         info = next(d.glob("*.info.json"), None)
         if info:
@@ -461,10 +506,22 @@ def update_rulebook_md(s: dict, results: list[dict], changes: list[str]) -> None
 
 
 def analyze(urls: list[str]) -> dict:
-    results = []
+    results, boards = [], []
     for u in urls:
-        mp4 = Path(u) if Path(u).exists() else download(u)
+        try:
+            mp4 = Path(u) if Path(u).exists() else download(u)
+        except BotBlocked:
+            log(f"유튜브가 이 서버의 영상 내려받기를 막았습니다(로봇 확인). 미리보기 그림만 받습니다: {u}")
+            d = storyboard_fallback(u)
+            if d:
+                boards.append(d)
+            continue
         results.append(analyze_video(mp4))
+    if boards:
+        log("미리보기 그림 저장: " + ", ".join(f"refs/{d.name}/storyboard_*.jpg" for d in boards)
+            + "\n  → 숫자 측정은 못 했습니다. 그림을 직접 보고 규칙집 2장에 반영하세요.")
+    if not results:
+        return {"videos": [], "storyboards": [d.name for d in boards]}
     s = summarize(results)
     write_json(REFS / "summary.json", {"summary": s, "videos": results})
     changes = apply_to_rules(s)

@@ -10,3 +10,4 @@ assets/sfx/*.wav
 assets/bgm/auto_lofi.wav
 __pycache__/
 *.pyc
+config/youtube_cookies.txt

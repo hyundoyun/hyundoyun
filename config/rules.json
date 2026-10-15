@@ -1,7 +1,7 @@
 {
   "_comment": "편집 규칙집(기계용). 사람용 설명은 docs/편집규칙집.md. 값을 바꾸면 다음 편집부터 바로 반영된다.",
   "version": 1,
-  "source": "기본값 (레퍼런스 영상 미분석). python -m editor analyze <유튜브링크...> 실행 시 측정값으로 갱신됨",
+  "source": "레퍼런스 5개(config/references.txt, 2026-10-15) 눈으로 분석 — 유튜브가 이 서버의 영상 내려받기를 막아 미리보기 그림(약 5~10초 간격, 저해상도)만 보고 정함. 소리·정확한 컷 간격은 측정 못 함(기본값 유지)",
   "output": {
     "width": 1920,
     "height": 1080,
@@ -50,11 +50,11 @@
     "audio_fade_ms": 12
   },
   "zoom": {
-    "_help": "컷이 이어질 때 화면 크기를 번갈아 바꿔 점프컷을 자연스럽게 한다. 강조 순간엔 펀치 줌.",
+    "_help": "레퍼런스: 넓은 화면 ↔ 가까운 화면을 자주 번갈아 씀(카메라 2대 느낌). 1대로 찍은 영상은 확대 비율을 번갈아 비슷하게 만든다.",
     "jumpcut_alternate": true,
     "jumpcut_scales": [
       1.0,
-      1.12
+      1.15
     ],
     "punch_in_on_emphasis": true,
     "punch_style": "snap",
@@ -66,34 +66,36 @@
   "subtitle": {
     "font": "Pretendard ExtraBold",
     "font_file": "assets/fonts/Pretendard-ExtraBold.otf",
-    "size_px": 68,
+    "size_px": 58,
     "color": "#FFFFFF",
     "outline_color": "#000000",
-    "outline_px": 5,
-    "shadow_px": 2,
-    "box": false,
-    "box_color": "#000000B0",
+    "outline_px": 14,
+    "shadow_px": 0,
+    "box": true,
+    "box_color": "#000000A6",
     "position": "bottom",
-    "margin_bottom_px": 90,
-    "max_chars_per_line": 18,
+    "margin_bottom_px": 70,
+    "max_chars_per_line": 22,
     "max_lines": 1,
     "min_duration_sec": 0.6,
     "highlight_words": true,
-    "highlight_color": "#FFE14D"
+    "highlight_color": "#7CFF4F",
+    "_help": "레퍼런스: 반투명 검은 상자 안 흰 글씨, 화면 아래 가운데, 한 줄. (상자 사용 시 outline_px = 상자 여백)"
   },
   "emphasis": {
-    "_help": "강조 자막: 숫자·핵심어·느낌표 문장에서 화면 위쪽에 크게 '팝' 하고 뜬다.",
+    "_help": "레퍼런스: 화면 아래쪽(자막 바로 위)에 아주 큰 굵은 글씨, 흰색·초록·주황빨강·노랑, 두꺼운 검은 테두리. 숫자·핵심 문장.",
     "font": "Black Han Sans",
     "font_file": "assets/fonts/BlackHanSans-Regular.ttf",
-    "size_px": 120,
+    "size_px": 124,
     "colors": [
-      "#FFE14D",
-      "#FF5A5A",
-      "#5AD2FF"
+      "#FFFFFF",
+      "#7CFF4F",
+      "#FF5A3C",
+      "#FFE14D"
     ],
     "outline_color": "#000000",
-    "outline_px": 8,
-    "position_y": 0.22,
+    "outline_px": 9,
+    "position_y": 0.7,
     "pop_ms": 160,
     "duration_sec": 1.4,
     "min_gap_sec": 4.0,
@@ -140,23 +142,36 @@
   "broll": {
     "_help": "⑤ 자료화면: 말한 내용에 맞는 공식 사이트/기사 제목 화면. 출처는 작게.",
     "enabled": true,
-    "mode": "pip",
-    "_mode_help": "pip = 화면 오른쪽 위에 카드로 띄움, full = 전체 화면으로 덮음",
+    "mode": "full",
+    "_mode_help": "full = 전체 화면(레퍼런스 방식, 오른쪽 아래에 말하는 사람 작은 창), pip = 오른쪽 위 카드",
     "pip_width_ratio": 0.56,
     "pip_margin_px": 48,
     "full_ken_burns": 1.06,
-    "duration_sec": 3.2,
-    "min_gap_sec": 6.0,
+    "duration_sec": 4.5,
+    "min_gap_sec": 4.0,
     "corner_radius_px": 18,
     "source_label": "출처: {source}",
     "source_size_px": 26,
-    "source_color": "#FFFFFFCC"
+    "source_color": "#FFFFFFCC",
+    "face_inset": true,
+    "face_inset_width_ratio": 0.22,
+    "face_inset_corner": "bottom-right",
+    "face_inset_margin_px": 32,
+    "face_inset_radius_px": 28
+  },
+  "watermark": {
+    "enabled": true,
+    "file": "assets/logo.png",
+    "width_px": 220,
+    "margin_px": 32,
+    "opacity": 0.9,
+    "_help": "레퍼런스: 왼쪽 위에 채널 로고가 항상 작게 떠 있음. assets/logo.png 를 넣으면 자동으로 붙고, 없으면 건너뜀."
   },
   "intro": {
     "enabled": true,
     "hook_from_script": true,
-    "hook_max_sec": 6.0,
-    "title_card_sec": 1.8,
+    "hook_max_sec": 8.0,
+    "title_card_sec": 1.5,
     "title_font": "Black Han Sans",
     "title_size_px": 110,
     "title_color": "#FFFFFF",
@@ -168,7 +183,10 @@
     "card_sec": 4.0,
     "text": "구독 · 좋아요 · 알림 설정",
     "sub_text": "다음 영상에서 만나요!",
-    "background": "#111111"
+    "background": "#111111",
+    "style": "fade",
+    "fade_sec": 1.5,
+    "_style_help": "fade = 카드 없이 마지막 장면이 어두워지며 끝남(레퍼런스 방식, '감사합니다' 자막은 그대로), card = 구독 카드 4초"
   },
   "qc": {
     "speech_gap_max_sec": 0.9,

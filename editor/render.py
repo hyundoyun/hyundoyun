@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 
 from . import broll as broll_mod
-from .common import ROOT, ffmpeg, log, read_json, write_json
-from .graphics import outro_card, title_card
+from .common import ROOT, asset, ffmpeg, log, read_json, write_json
+from .graphics import inset_mask, outro_card, title_card
 from .sounds import SR, mix
 from .subtitles import build_ass, make_lines
 
@@ -50,7 +50,10 @@ def render(work: Path, rules: dict, out_path: Path) -> Path:
 
     hook = pick_hook(script, tl, rules)
     T = rules["intro"]["title_card_sec"] if rules["intro"].get("enabled", True) else 0.0
-    O = rules["outro"]["card_sec"] if rules["outro"].get("enabled", True) else 0.0
+    oc = rules["outro"]
+    # 아웃트로: card = 구독 카드를 붙임, fade = 카드 없이 마지막 장면이 어두워지며 끝남(레퍼런스 방식)
+    fade_out = oc.get("enabled", True) and oc.get("style", "card") == "fade"
+    O = oc["card_sec"] if oc.get("enabled", True) and not fade_out else 0.0
     hook_len = (hook[1] - hook[0]) if hook else 0.0
     main_off = hook_len + T
     total = main_off + D + O
@@ -109,6 +112,23 @@ def render(work: Path, rules: dict, out_path: Path) -> Path:
         inputs += ["-loop", "1", "-framerate", str(fps), "-t", f"{b['dur']:.3f}", "-i", b["png"]]
     inputs += ["-i", final_wav]
     a_idx = 3 + len(brolls)
+    n_in = a_idx + 1
+    b_cfg = rules["broll"]
+    # 전체 화면 자료화면 위에 말하는 사람을 작은 창으로 계속 보여준다
+    inset = b_cfg["mode"] == "full" and b_cfg.get("face_inset", False) and brolls
+    if inset:
+        iw = int(W * b_cfg.get("face_inset_width_ratio", 0.22)) // 2 * 2
+        ih = int(iw * H / W) // 2 * 2
+        mask = inset_mask(iw, ih, b_cfg.get("face_inset_radius_px", 28), work / "inset_mask.png")
+        inputs += ["-loop", "1", "-framerate", str(fps), "-t", f"{total:.3f}", "-i", mask]
+        mask_idx, n_in = n_in, n_in + 1
+    wm = rules.get("watermark", {})
+    wm_file = asset(wm["file"]) if wm.get("enabled") and wm.get("file") else None
+    if wm_file and wm_file.exists():
+        inputs += ["-loop", "1", "-framerate", str(fps), "-t", f"{total:.3f}", "-i", wm_file]
+        wm_idx, n_in = n_in, n_in + 1
+    else:
+        wm_file = None
 
     fg = []
     v = "[0:v]"
@@ -128,7 +148,10 @@ def render(work: Path, rules: dict, out_path: Path) -> Path:
         segs.append("[oc]")
     fg.append(f"{''.join(segs)}concat=n={len(segs)}:v=1:a=0,format=yuv420p[base]")
     v = "[base]"
-    b_cfg = rules["broll"]
+    if inset:
+        fg.append(f"[base]split[base0][facesrc];[facesrc]scale={iw}:{ih},format=rgba[fs];"
+                  f"[{mask_idx}:v]scale={iw}:{ih},format=gray[fm];[fs][fm]alphamerge[face]")
+        v = "[base0]"
     for k, b in enumerate(brolls):
         st, du = b["final_start"], b["dur"]
         if b_cfg["mode"] == "full":
@@ -139,6 +162,21 @@ def render(work: Path, rules: dict, out_path: Path) -> Path:
                   f"setpts=PTS-STARTPTS+{st:.3f}/TB[b{k}];{v}[b{k}]overlay={pos}:eof_action=pass:"
                   f"enable='between(t,{st:.3f},{st + du:.3f})'[ov{k}]")
         v = f"[ov{k}]"
+    if inset:
+        m = b_cfg.get("face_inset_margin_px", 32)
+        x = f"{m}" if b_cfg.get("face_inset_corner", "bottom-right") == "bottom-left" else f"W-w-{m}"
+        on = "+".join(f"between(t,{b['final_start'] + 0.15:.3f},{b['final_start'] + b['dur'] - 0.15:.3f})" for b in brolls)
+        fg.append(f"{v}[face]overlay={x}:H-h-{m}:enable='{on}'[vin]")
+        v = "[vin]"
+    if wm_file:
+        m = wm.get("margin_px", 32)
+        fg.append(f"[{wm_idx}:v]scale={wm.get('width_px', 220)}:-2,format=rgba,"
+                  f"colorchannelmixer=aa={wm.get('opacity', 0.9)}[wm];{v}[wm]overlay={m}:{m}:shortest=1[vwm]")
+        v = "[vwm]"
+    if fade_out:
+        fd = min(oc.get("fade_sec", 1.5), D)
+        fg.append(f"{v}fade=t=out:st={main_off + D - fd:.3f}:d={fd:.3f}[vfd]")
+        v = "[vfd]"
     fontsdir = str(ROOT / "assets" / "fonts")
     fg.append(f"{v}subtitles='{ass}':fontsdir='{fontsdir}'[vout]")
     lufs = o["loudness_lufs"]
@@ -160,7 +198,7 @@ def render(work: Path, rules: dict, out_path: Path) -> Path:
     write_json(work / "render_plan.json", {
         "output": str(out_path), "total": total, "hook": hook, "hook_len": hook_len, "title_sec": T,
         "main_offset": main_off, "main_duration": D, "outro_sec": O, "mapping": mapping,
-        "static_ranges": static, "brolls": brolls, "emphasis": emph, "blur_regions": script.get("blur", []),
+        "static_ranges": static, "face_inset": bool(inset), "outro_fade": fade_out, "brolls": brolls, "emphasis": emph, "blur_regions": script.get("blur", []),
     })
     log(f"완성: {out_path}")
     return out_path

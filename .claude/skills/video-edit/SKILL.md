@@ -76,5 +76,8 @@ python3 -m editor analyze "<링크1>" "<링크2>" "<링크3>"   # 링크를 새�
 python3 -m editor analyze                                 # 저장된 레퍼런스 목록(config/references.txt) 분석
 ```
 - 유튜브가 막혀 있으면 환경 Network access 에서 www.youtube.com, *.googlevideo.com, i.ytimg.com 허용(또는 더 넓은 단계) 안내.
+- 접속은 되는데 유튜브가 '로봇 확인(Sign in to confirm you're not a bot)'으로 영상을 막으면, analyze 가 자동으로
+  미리보기 그림만 `refs/<ID>/storyboard_*.jpg` 에 받는다(3x3 칸, 약 5~10초 간격). 그걸 Read 로 보고 2장에 반영.
+  영상까지 재려면 유튜브 로그인 쿠키를 `config/youtube_cookies.txt` 로 넣고 다시 실행(저장소엔 안 올라감).
 - 끝나면 `refs/<ID>/contact_*.jpg` 장면 썸네일을 Read 로 직접 보고, 숫자로 안 잡히는 것(글꼴 느낌, 자막 상자 유무,
   인트로·아웃트로 구성, 자료화면 배치)을 `docs/편집규칙집.md` 2장과 `rules.json` 에 반영한 뒤 커밋·푸시.
