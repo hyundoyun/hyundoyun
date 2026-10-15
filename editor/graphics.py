@@ -125,7 +125,9 @@ def finish_broll(src: Path, source: str, rules: dict, out: Path) -> Path:
         d = ImageDraw.Draw(canvas)
         if label:
             tw = d.textlength(label, font=fs)
-            d.text((W - tw - 36, H - b["source_size_px"] - 30), label, font=fs, fill=hex_to_rgba(b["source_color"]),
+            # 얼굴 작은 창이 오른쪽 아래에 오면 출처는 왼쪽 아래로(가려지지 않게)
+            left = b.get("face_inset") and b.get("face_inset_corner", "bottom-right") == "bottom-right"
+            d.text((36 if left else W - tw - 36, H - b["source_size_px"] - 30), label, font=fs, fill=hex_to_rgba(b["source_color"]),
                    stroke_width=2, stroke_fill=(0, 0, 0))
         canvas.save(out)
         return out
