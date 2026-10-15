@@ -1,0 +1,6 @@
+# 레퍼런스 유튜브 영상 (2026-10-15 사용자 제공). `python3 -m editor analyze` 를 링크 없이 실행하면 이 목록을 분석한다.
+https://www.youtube.com/watch?v=gMZ61Y0YZw4
+https://www.youtube.com/watch?v=88L4CwYrU8w
+https://www.youtube.com/watch?v=eNrfPO0YEm8
+https://www.youtube.com/watch?v=8cMJGrtnlOg
+https://www.youtube.com/watch?v=Gyl7s7v2jxE

@@ -21,7 +21,12 @@ SR = 16000
 # ---------- 내려받기 ----------
 def download(url: str) -> Path:
     REFS.mkdir(exist_ok=True)
-    r = run(["yt-dlp", "--print", "id", "--skip-download", url])
+    r = run(["yt-dlp", "--print", "id", "--skip-download", url], check=False)
+    if r.returncode != 0:
+        blocked = "403" in r.stderr or "proxy" in r.stderr.lower()
+        raise SystemExit(f"유튜브 영상을 받을 수 없습니다: {url}\n" + (
+            "→ 이 환경의 인터넷 설정이 www.youtube.com 접속을 막고 있습니다. 클라우드 환경 메뉴 → Edit → Network access 에서 "
+            "www.youtube.com, *.googlevideo.com 을 허용한 뒤 새 세션에서 다시 실행하세요." if blocked else r.stderr[-500:]))
     vid = r.stdout.strip().splitlines()[-1]
     d = REFS / vid
     d.mkdir(exist_ok=True)

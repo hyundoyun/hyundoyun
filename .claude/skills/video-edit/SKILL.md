@@ -72,7 +72,8 @@ python3 -m editor edit VIDEO --start cut
 
 ## 8. 레퍼런스 분석 ("이 영상들처럼 편집해줘" + 유튜브 링크)
 ```bash
-python3 -m editor analyze "<링크1>" "<링크2>" "<링크3>"
+python3 -m editor analyze "<링크1>" "<링크2>" "<링크3>"   # 링크를 새로 받았을 때(config/references.txt 에도 추가)
+python3 -m editor analyze                                 # 저장된 레퍼런스 목록(config/references.txt) 분석
 ```
 - 유튜브가 막혀 있으면 환경 Network access 에서 www.youtube.com, *.googlevideo.com, i.ytimg.com 허용(또는 더 넓은 단계) 안내.
 - 끝나면 `refs/<ID>/contact_*.jpg` 장면 썸네일을 Read 로 직접 보고, 숫자로 안 잡히는 것(글꼴 느낌, 자막 상자 유무,

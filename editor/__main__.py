@@ -30,7 +30,7 @@ def main(argv=None):
     d.add_argument("--folder", default="편집할영상")
     d.add_argument("--download-only", action="store_true")
     a = sub.add_parser("analyze", help="레퍼런스 유튜브 분석")
-    a.add_argument("urls", nargs="+")
+    a.add_argument("urls", nargs="*", help="비우면 config/references.txt 목록을 분석")
     f = sub.add_parser("feedback", help="아쉬운 점을 규칙집에 추가")
     f.add_argument("text")
     f.add_argument("--applied", action="append", default=[], help="Claude가 직접 바꾼 규칙 설명")
@@ -63,7 +63,14 @@ def main(argv=None):
     elif args.cmd == "analyze":
         from .analyze import analyze
 
-        analyze(args.urls)
+        urls = args.urls
+        if not urls:
+            from .common import ROOT
+
+            ref = ROOT / "config" / "references.txt"
+            urls = [ln.strip() for ln in ref.read_text(encoding="utf-8").splitlines()
+                    if ln.strip() and not ln.startswith("#")]
+        analyze(urls)
     elif args.cmd == "feedback":
         from .feedback import add
 
