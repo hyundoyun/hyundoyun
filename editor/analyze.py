@@ -22,10 +22,52 @@ SR = 16000
 COOKIES = ROOT / "config" / "youtube_cookies.txt"  # 있으면 사용(로봇 확인 통과용, 저장소에는 올리지 않음)
 
 
+def cookies_from_env() -> Path | None:
+    """환경 설정 YOUTUBE_COOKIES(쿠키 파일 내용 그대로, 또는 base64)를 쿠키 파일로 만든다.
+    붙여넣다 줄바꿈이 공백으로 바뀌어도 7칸씩 다시 묶어 복원한다."""
+    import base64
+    import binascii
+    import os
+
+    raw = os.environ.get("YOUTUBE_COOKIES", "").strip()
+    if not raw:
+        return COOKIES if COOKIES.exists() else None
+    if "\t" not in raw and " " not in raw:
+        try:
+            raw = base64.b64decode(raw + "=" * (-len(raw) % 4)).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError):
+            pass
+    tok = raw.replace("\\n", "\n").split()
+    rows = []
+    i = 0
+    while i + 6 < len(tok):
+        d, f, path, sec, exp = tok[i:i + 5]
+        if ("." in d and f in ("TRUE", "FALSE") and path.startswith("/") and sec in ("TRUE", "FALSE")
+                and exp.lstrip("-").isdigit()):
+            # 값이 빈 쿠키: 다음 칸이 바로 새 줄의 도메인이면 값 없음
+            nxt = tok[i + 6]
+            if i + 7 < len(tok) and tok[i + 7] in ("TRUE", "FALSE") and "." in nxt and i + 8 < len(tok) \
+                    and tok[i + 8].startswith("/"):
+                rows.append("\t".join(tok[i:i + 6] + [""]))
+                i += 6
+                continue
+            rows.append("\t".join(tok[i:i + 7]))
+            i += 7
+        else:
+            i += 1
+    if not rows:
+        log("YOUTUBE_COOKIES 값이 쿠키 파일 모양이 아닙니다 — docs/유튜브_연결.md 참고")
+        return COOKIES if COOKIES.exists() else None
+    COOKIES.write_text("# Netscape HTTP Cookie File\n" + "\n".join(rows) + "\n", encoding="utf-8")
+    COOKIES.chmod(0o600)
+    return COOKIES
+
+
 def YT_OPTS() -> list[str]:
     import shutil
 
-    opts = ["--cookies", str(COOKIES)] if COOKIES.exists() else []
+    ck = cookies_from_env()
+    opts = ["--cookies", str(ck)] if ck else []
     if shutil.which("node"):
         opts += ["--js-runtimes", "node"]
     return opts
